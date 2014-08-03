@@ -1,0 +1,10 @@
+[package]
+
+name = "mdo"
+version = "0.0.1"
+authors = ["Guillaume Pinot <texitoi@texitoi.eu>"]
+
+[[lib]]
+
+name = "mdo"
+path = "src/lib.rs"

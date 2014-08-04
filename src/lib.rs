@@ -10,9 +10,9 @@ macro_rules! mdo(
     );
 
     (
-        when $e: expr ; $( $t: tt )*
+        $p: pat <- $e: expr ; $( $t: tt )*
     ) => (
-        bind(if $e { ret(()) } else { mzero() }, |_| mdo! { $( $t )* })
+        bind($e, |$p| mdo! { $( $t )* } )
     );
 
     (
@@ -22,9 +22,9 @@ macro_rules! mdo(
     );
 
     (
-        $p: pat <- $e: expr ; $( $t: tt )*
+        when $e: expr ; $( $t: tt )*
     ) => (
-        bind($e, |$p| mdo! { $( $t )* } )
+        bind(if $e { ret(()) } else { mzero() }, |_| mdo! { $( $t )* })
     );
 
     (
@@ -170,9 +170,31 @@ mod tests {
     fn to_trick() {
         use super::iter::{bind, ret};
         let l = mdo! {
-            to <- range(0i, 5);
-            to ret(to)
+            when <- range(0i, 5);
+            to ret(when)
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![0, 1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn when_trick() {
+        use super::iter::{bind, ret, mzero};
+        let l = mdo! {
+            when <- range(0i, 5);
+            when when != 3;
+            to ret(when)
+        }.collect::<Vec<int>>();
+        assert_eq!(l, vec![0, 1, 2, 4]);
+    }
+
+    #[test]
+    fn ign_trick() {
+        use super::iter::{bind, ret};
+        let l = mdo! {
+            ign <- range(0i, 5);
+            ign range(0i, 0);
+            to ret(ign)
+        }.collect::<Vec<int>>();
+        assert_eq!(l, vec![]);
     }
 }

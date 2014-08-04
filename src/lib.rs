@@ -10,14 +10,16 @@ macro_rules! mdo(
     );
 
     (
-        $( + $s1: stmt ; )* | $p1: pat <- $e1: expr ;
-        $( $( + $s2: stmt ; )* | $p2: pat <- $e2: expr ; )*
-        > $f: expr
+        + $s: stmt ; $( $t: tt )*
+    ) => (
+        { $s ; mdo! { $( $t )* } }
+    );
+
+    (
+        | $p: pat <- $e: expr ; $( $t: tt )*
     ) => (
         {
-            $( $s1 ; )* bind(
-                $e1,
-                |$p1| mdo! { $( $( + $s2 ; )* | $p2 <- $e2 ; )* > $f } )
+            bind($e, |$p| mdo! { $( $t )* } )
         }
     )
 )
@@ -135,7 +137,8 @@ mod tests {
             | x <- range(1, y + 1);
             + let test = x * x + y * y == z * z;
             | _ <- guard(test);
-            > { let res = (x, y, z); ret(res) }
+            + let res = (x, y, z);
+            > ret(res)
         }.collect::<Vec<(int, int, int)>>();
         assert_eq!(l, vec![(3, 4, 5), (6, 8, 10)]);
     }

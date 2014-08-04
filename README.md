@@ -33,11 +33,11 @@ fn main() {
 
     // the same thing, using the mdo! macro
     let l = mdo! {
-        bind z = range(1i, 11);
-        bind x = range(1, z);
-        bind y = range(x, z);
+        z <- range(1i, 11);
+        x <- range(1, z);
+        y <- range(x, z);
         when x * x + y * y == z * z;
-        ret((x, y, z))
+        to ret((x, y, z))
     }.collect::<Vec<(int, int, int)>>();
     println!("{}", l);
 }

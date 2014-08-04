@@ -1,4 +1,4 @@
-# Rust mdo
+# Rust mdo [![Build Status](https://travis-ci.org/TeXitoi/rust-mdo.svg?branch=master)](https://travis-ci.org/TeXitoi/rust-mdo)
 
 ## Presentation
 
@@ -42,7 +42,3 @@ fn main() {
     println!("{}", l);
 }
 ```
-
-## Build Status
-
-[![Build Status](https://travis-ci.org/TeXitoi/rust-mdo.svg?branch=master)](https://travis-ci.org/TeXitoi/rust-mdo)

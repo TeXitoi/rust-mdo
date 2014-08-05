@@ -170,8 +170,8 @@ mod tests {
     fn to_trick() {
         use super::iter::{bind, ret};
         let l = mdo! {
-            when <- range(0i, 5);
-            to ret(when)
+            to <- range(0i, 5);
+            to ret(to)
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![0, 1, 2, 3, 4]);
     }

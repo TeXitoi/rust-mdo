@@ -42,3 +42,8 @@ fn main() {
     println!("{}", l);
 }
 ```
+
+## Documentation
+
+You can find the rustdoc
+[here](http://www.rust-ci.org/TeXitoi/rust-mdo/doc/mdo/).

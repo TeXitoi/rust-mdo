@@ -32,7 +32,8 @@
 ///     x <- range(0i, 5); // assign x to [0, 5[
 ///     ign range(0i, 2); // duplicate each value
 ///     when x % 2 == 0; // filter on even values
-///     ret ret(x + 10) // return x + 10
+///     let y = x + 5; // create y
+///     ret ret(y + 5) // return y + 5
 /// }.collect::<Vec<int>>();
 /// assert_eq!(l, vec![10, 10, 12, 12, 14, 14]);
 /// ```
@@ -265,7 +266,8 @@ mod tests {
             x <- range(0i, 5); // assign x to [0, 5[
             ign range(0i, 2); // duplicate each value
             when x % 2 == 0; // filter on even values
-            ret ret(x + 10) // return x + 10
+            let y = x + 5; // create y
+            ret ret(y + 5) // return y + 5
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![10, 10, 12, 12, 14, 14]);
     }

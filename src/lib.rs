@@ -28,7 +28,7 @@ macro_rules! mdo(
     );
 
     (
-        to $f: expr
+        ret $f: expr
     ) => (
         $f
     )
@@ -91,24 +91,24 @@ mod tests {
     fn option_mdo() {
         use super::option::{bind, ret, mzero};
         let x = mdo! {
-            to ret(5i)
+            ret ret(5i)
         };
         assert_eq!(x, Some(5i));
         let x = mdo! {
             x <- ret(5i);
-            to ret(x + 1)
+            ret ret(x + 1)
         };
         assert_eq!(x, Some(6i));
         let x = mdo! {
             x <- ret(5i);
             x <- ret(x + 5);
-            to ret(x * 2)
+            ret ret(x * 2)
         };
         assert_eq!(x, Some(20i));
         let x = mdo! {
             x <- ret(5i);
             when x == 0;
-            to ret(x * 2)
+            ret ret(x * 2)
         };
         assert_eq!(x, None);
     }
@@ -134,13 +134,13 @@ mod tests {
         use super::iter::{bind, ret, mzero};
         let l = mdo! {
             x <- range(0i, 3);
-            to range(x, 3)
+            ret range(x, 3)
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![0, 1, 2, 1, 2, 2]);
         let l = mdo! {
             x <- range(0i, 3);
             y <- range(0i, 3);
-            to ret(x + y)
+            ret ret(x + y)
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![0, 1, 2, 1, 2, 3, 2, 3, 4]);
         let l = mdo! {
@@ -150,7 +150,7 @@ mod tests {
             let test = x * x + y * y == z * z;
             when test;
             let res = (x, y, z);
-            to ret(res)
+            ret ret(res)
         }.collect::<Vec<(int, int, int)>>();
         assert_eq!(l, vec![(3, 4, 5), (6, 8, 10)]);
     }
@@ -161,19 +161,19 @@ mod tests {
         let l = mdo! {
             x <- range(0i, 5);
             ign range(0i, 2);
-            to ret(x)
+            ret ret(x)
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![0, 0, 1, 1, 2, 2, 3, 3, 4, 4]);
     }
 
     #[test]
-    fn to_trick() {
-        use super::iter::{bind, ret};
+    fn ret_trick() {
+        use super::iter::bind;
         let l = mdo! {
-            to <- range(0i, 5);
-            to ret(to)
+            ret <- range(0i, 5);
+            ret range(0, ret)
         }.collect::<Vec<int>>();
-        assert_eq!(l, vec![0, 1, 2, 3, 4]);
+        assert_eq!(l, vec![0, 0, 1, 0, 1, 2, 0, 1, 2, 3]);
     }
 
     #[test]
@@ -182,7 +182,7 @@ mod tests {
         let l = mdo! {
             when <- range(0i, 5);
             when when != 3;
-            to ret(when)
+            ret ret(when)
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![0, 1, 2, 4]);
     }
@@ -193,7 +193,7 @@ mod tests {
         let l = mdo! {
             ign <- range(0i, 5);
             ign range(0i, 0);
-            to ret(ign)
+            ret ret(ign)
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![]);
     }

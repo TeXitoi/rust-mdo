@@ -1,6 +1,41 @@
 #![license = "MIT"]
+#![deny(missing_doc)]
+#![deny(warnings)]
+
 #![feature(macro_rules)]
 
+//! Monadic do notation
+
+/// Monadic do notation using duck typing
+///
+/// Syntax:
+/// `(instr)* ; ret expr`
+///
+/// instr can be:
+///
+/// * `pattern <- expression`: bind expression to pattern. a `bind`
+///   function must be in scope.
+///
+/// * `let pattern = expression`: assign expression to pattern, as
+///   normal rust let.
+///
+/// * `ign expression`: equivalent to `_ <- expression`
+///
+/// * `when expression`: filter on the monad. `ret` and `mzero`
+///   functions must be in scope.
+///
+/// # Example
+///
+/// ```
+/// use iter::{bind, ret, mzero};
+/// let l = mdo! {
+///     x <- range(0i, 5); // assign x to [0, 5[
+///     ign range(0i, 2); // duplicate each value
+///     when x % 2 == 0; // filter on even values
+///     ret ret(x + 10) // return x + 10
+/// }.collect::<Vec<int>>();
+/// assert_eq!(l, vec![10, 10, 12, 12, 14, 14]);
+/// ```
 #[macro_export]
 macro_rules! mdo(
     (
@@ -35,36 +70,61 @@ macro_rules! mdo(
 )
 
 pub mod option {
+    //! Monadic functions for Option<T>
+
+    /// bind for Option<T>, equivalent to `m.and_then(f)`
     pub fn bind<T, U>(m: Option<T>, f: |T| -> Option<U>) -> Option<U> {
         m.and_then(f)
     }
+
+    /// return for Option<T>, equivalent to `Some(x)`
     pub fn ret<T>(x: T) -> Option<T> {
         Some(x)
     }
+
+    /// mzero for Option<T>, equivalent to `None`
     pub fn mzero<T>() -> Option<T> {
         None
     }
 }
 
 pub mod result {
+    //! Monadic functions for Result<T, E>
+
+    /// bind for Result<T, E>, equivalent to `m.and_then(f)`
     pub fn bind<T, E, U>(m: Result<T, E>, f: |T| -> Result<U, E>) -> Result<U, E> {
         m.and_then(f)
     }
+
+    /// return for Result<T, E>, equivalent to `Ok(x)`
     pub fn ret<T, E>(x: T) -> Result<T, E> {
         Ok(x)
     }
 }
 
 pub mod iter {
+    //! Monadic functions for Iterator<T>
+
     use std::vec;
     use std::option;
+
+    /// bind for Result<T, E>, equivalent to `m.flat_map(f)`
+    ///
+    /// Note that the current implementation collect the result in a
+    /// Vec<B> because flat_map depend on the lifetime of `f`.  It
+    /// mut be fixed in the futur using a unboxed closure moved
+    /// inside a flat_map like iterator.
     pub fn bind<A, I: Iterator<A>, B, U: Iterator<B>>(
         m: I, f: |A| -> U) -> vec::MoveItems<B> {
         m.flat_map(f).collect::<Vec<B>>().move_iter()
     }
+
+    /// return for Iterator<T>, an iterator with one value.
     pub fn ret<T>(x: T) -> option::Item<T> {
         Some(x).move_iter()
     }
+
+    /// mzero for Iterator<T>, an empty iterator.
     pub fn mzero<T>() -> option::Item<T> {
         None.move_iter()
     }
@@ -196,5 +256,17 @@ mod tests {
             ret ret(ign)
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![]);
+    }
+
+    #[test]
+    fn mdo_doc_example() {
+        use super::iter::{bind, ret, mzero};
+        let l = mdo! {
+            x <- range(0i, 5); // assign x to [0, 5[
+            ign range(0i, 2); // duplicate each value
+            when x % 2 == 0; // filter on even values
+            ret ret(x + 10) // return x + 10
+        }.collect::<Vec<int>>();
+        assert_eq!(l, vec![10, 10, 12, 12, 14, 14]);
     }
 }

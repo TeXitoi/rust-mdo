@@ -10,6 +10,7 @@ install:
 script:
   - cargo build
   - cargo test
+  - ./target/test/iter_mdo
   - rustdoc src/lib.rs --crate-name mdo
 after_script:
   - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh

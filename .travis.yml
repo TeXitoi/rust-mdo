@@ -4,10 +4,11 @@ env:
   global:
     - secure: JfmmtW/PY/LagYmB/e43Jr8FJL2GKx3Jsx3IyENJpAihaEnBMFyywqZ9VZ66Y8MYFgFi/nukRIel8chnVP04LCIkAOfIrFrhyaQRpIlWmfi0unPKlvykEtyO1+26sPSAktHts7ulHALR52VRgLNIcx0hmclUw+WITCgfvrt4c8I=
 install:
-  - curl http://www.rust-lang.org/rustup.sh | sudo sh -
+  - curl https://static.rust-lang.org/rustup.sh | sudo sh -
 script:
   - cargo build --verbose
   - cargo test --verbose
+  - ./target/test/iter_mdo
   - rustdoc src/lib.rs --crate-name mdo
 after_script:
   - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh

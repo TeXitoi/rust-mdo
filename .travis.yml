@@ -9,6 +9,6 @@ script:
   - cargo build --verbose
   - cargo test --verbose
   - ./target/test/iter_mdo
-  - rustdoc src/lib.rs --crate-name mdo
+  - cargo doc --verbose
 after_script:
-  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
+  - cd target && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh

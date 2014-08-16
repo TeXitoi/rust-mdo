@@ -26,7 +26,7 @@
 ///
 /// # Example
 ///
-/// ```
+/// ```rust,ignore
 /// use iter::{bind, ret, mzero};
 /// let l = mdo! {
 ///     x <- range(0i, 5); // assign x to [0, 5[

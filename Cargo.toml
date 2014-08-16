@@ -4,7 +4,7 @@ name = "mdo"
 version = "0.0.4"
 authors = ["Guillaume Pinot <texitoi@texitoi.eu>"]
 
-[[lib]]
+[lib]
 
 name = "mdo"
 path = "src/lib.rs"

@@ -1,8 +1,8 @@
-env:
-  - LD_LIBRARY_PATH=/usr/local/lib
+language: c
 env:
   global:
-    - secure: JfmmtW/PY/LagYmB/e43Jr8FJL2GKx3Jsx3IyENJpAihaEnBMFyywqZ9VZ66Y8MYFgFi/nukRIel8chnVP04LCIkAOfIrFrhyaQRpIlWmfi0unPKlvykEtyO1+26sPSAktHts7ulHALR52VRgLNIcx0hmclUw+WITCgfvrt4c8I=
+    - secure: C12rp1LgtgILMWfyDSqPz2rn57qm+/9v+ZNECjq2zjmWz8aAUTgK+T4iWgD/EtzWjNt9CfNOMhtHjZIzUaX6heTKUwxLcGssVKE4rNXKaQG+VyBxSz5JD6HvVhvHptbNoY7r+HdZ6kTRob2nFftdQ1/yC01i9h244uJqOSfczs8=
+    - LD_LIBRARY_PATH=/usr/local/lib
 install:
   - curl https://static.rust-lang.org/rustup.sh | sudo sh -
 script:
@@ -11,4 +11,5 @@ script:
   - ./target/test/iter_mdo
   - cargo doc --verbose
 after_script:
-  - cd target && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
+  - mv target/doc doc
+  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh

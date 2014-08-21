@@ -8,7 +8,7 @@ install:
 script:
   - cargo build --verbose
   - cargo test --verbose
-  - ./target/test/iter_mdo
+  - ./target/iter_mdo
   - cargo doc --verbose
 after_script:
   - mv target/doc doc

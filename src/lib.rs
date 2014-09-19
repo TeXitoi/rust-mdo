@@ -124,17 +124,17 @@ pub mod iter {
     /// inside a flat_map like iterator.
     pub fn bind<A, I: Iterator<A>, B, U: Iterator<B>>(
         m: I, f: |A| -> U) -> vec::MoveItems<B> {
-        m.flat_map(f).collect::<Vec<B>>().move_iter()
+        m.flat_map(f).collect::<Vec<B>>().into_iter()
     }
 
     /// return for Iterator<T>, an iterator with one value.
     pub fn ret<T>(x: T) -> option::Item<T> {
-        Some(x).move_iter()
+        Some(x).into_iter()
     }
 
     /// mzero for Iterator<T>, an empty iterator.
     pub fn mzero<T>() -> option::Item<T> {
-        None.move_iter()
+        None.into_iter()
     }
 }
 

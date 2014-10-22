@@ -1,7 +1,7 @@
 [package]
 
 name = "mdo"
-version = "0.0.4"
+version = "0.1.0"
 authors = ["Guillaume Pinot <texitoi@texitoi.eu>"]
 
 [lib]

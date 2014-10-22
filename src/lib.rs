@@ -10,6 +10,7 @@
 #![deny(warnings)]
 
 #![feature(macro_rules)]
+#![feature(unboxed_closures, overloaded_calls)]
 
 //! Monadic do notation
 
@@ -55,19 +56,25 @@ macro_rules! mdo(
     (
         $p: pat <- $e: expr ; $( $t: tt )*
     ) => (
-        bind($e, |$p| mdo! { $( $t )* } )
+        bind($e, move |&: $p | mdo! { $( $t )* } )
+    );
+
+    (
+        $p: pat : $ty: ty <- $e: expr ; $( $t: tt )*
+    ) => (
+        bind($e, move |&: $p : $ty | mdo! { $( $t )* } )
     );
 
     (
         ign $e: expr ; $( $t: tt )*
     ) => (
-        bind($e, |_| mdo! { $( $t )* })
+        bind($e, move |&: _| mdo! { $( $t )* })
     );
 
     (
         when $e: expr ; $( $t: tt )*
     ) => (
-        bind(if $e { ret(()) } else { mzero() }, |_| mdo! { $( $t )* })
+        bind(if $e { ret(()) } else { mzero() }, move |&: _| mdo! { $( $t )* })
     );
 
     (
@@ -81,8 +88,11 @@ pub mod option {
     //! Monadic functions for Option<T>
 
     /// bind for Option<T>, equivalent to `m.and_then(f)`
-    pub fn bind<T, U>(m: Option<T>, f: |T| -> Option<U>) -> Option<U> {
-        m.and_then(f)
+    pub fn bind<T, U, F: Fn(T) -> Option<U>>(m: Option<T>, f: F) -> Option<U> {
+        match m {
+            Some(a) => f(a),
+            None => None
+        }
     }
 
     /// return for Option<T>, equivalent to `Some(x)`
@@ -101,7 +111,10 @@ pub mod result {
 
     /// bind for Result<T, E>, equivalent to `m.and_then(f)`
     pub fn bind<T, E, U>(m: Result<T, E>, f: |T| -> Result<U, E>) -> Result<U, E> {
-        m.and_then(f)
+        match m {
+            Ok(a) => f(a),
+            Err(err) => Err(err)
+        }
     }
 
     /// return for Result<T, E>, equivalent to `Ok(x)`
@@ -113,8 +126,36 @@ pub mod result {
 pub mod iter {
     //! Monadic functions for Iterator<T>
 
-    use std::vec;
     use std::option;
+
+    /// An iterator that maps each element to an iterator,
+    /// and yields the elements of the produced iterators
+    ///
+    #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+    pub struct UnboxedFlatMap<A, T, U, F> {
+        iter: T,
+        f: F,
+        frontiter: Option<U>
+    }
+    impl<A, T, B, U, F> Iterator<B> for UnboxedFlatMap<A, T, U, F>
+            where T: Iterator<A>,
+                  U: Iterator<B>,
+                  F: Fn(A) -> U {
+        fn next(&mut self) -> Option<B> {
+            loop {
+                for inner in self.frontiter.iter_mut() {
+                    for x in *inner {
+                        return Some(x)
+                    }
+                }
+                match self.iter.next().map(|x| (self.f)(x)) {
+                    None => return None,
+                    next => self.frontiter = next,
+                }
+            }
+        }
+    }
+
 
     /// bind for Result<T, E>, equivalent to `m.flat_map(f)`
     ///
@@ -122,9 +163,11 @@ pub mod iter {
     /// Vec<B> because flat_map depend on the lifetime of `f`.  It
     /// mut be fixed in the futur using a unboxed closure moved
     /// inside a flat_map like iterator.
-    pub fn bind<A, I: Iterator<A>, B, U: Iterator<B>>(
-        m: I, f: |A| -> U) -> vec::MoveItems<B> {
-        m.flat_map(f).collect::<Vec<B>>().into_iter()
+    pub fn bind<A, T, B, U, F>(m: T, f: F) -> UnboxedFlatMap<A, T, U, F>
+            where T: Iterator<A>,
+                  U: Iterator<B>,
+                  F: Fn(A) -> U {
+        UnboxedFlatMap { iter: m, f: f, frontiter: None }
     }
 
     /// return for Iterator<T>, an iterator with one value.
@@ -146,12 +189,12 @@ mod tests {
         use super::option::{bind, ret, mzero};
         let x = ret(5i);
         assert_eq!(x, Some(5i));
-        let x = bind(ret(5i), |x| ret(x + 1));
+        let x = bind(ret(5i), move |&: x: int| ret(x + 1));
         assert_eq!(x, Some(6i));
-        let x = bind(ret(5i), |x| bind(ret(x + 5), |x| ret(x * 2)));
+        let x = bind(ret(5i), move |&: x: int| bind(ret(x + 5), |&: x: int| ret(x * 2)));
         assert_eq!(x, Some(20));
-        let x = bind(ret(5i), |x| bind(if x == 0 { ret(()) } else { mzero() },
-                                       |_| ret(x * 2)));
+        let x = bind(ret(5i), move |&: x: int| bind(if x == 0 { ret(()) } else { mzero() },
+                                                    |&: _| ret(x * 2)));
         assert_eq!(x, None);
     }
 
@@ -163,18 +206,18 @@ mod tests {
         };
         assert_eq!(x, Some(5i));
         let x = mdo! {
-            x <- ret(5i);
+            x: int <- ret(5i);
             ret ret(x + 1)
         };
         assert_eq!(x, Some(6i));
         let x = mdo! {
-            x <- ret(5i);
-            x <- ret(x + 5);
+            x: int <- ret(5i);
+            x: int <- ret(x + 5);
             ret ret(x * 2)
         };
         assert_eq!(x, Some(20i));
         let x = mdo! {
-            x <- ret(5i);
+            x: int <- ret(5i);
             when x == 0;
             ret ret(x * 2)
         };
@@ -184,16 +227,18 @@ mod tests {
     #[test]
     fn iter_bind() {
         use super::iter::{bind, ret, mzero};
-        let mut l = bind(range(0i, 3), |x| range(x, 3));
+        let mut l = bind(range(0i, 3), move |&: x| range(x, 3));
         assert_eq!(l.collect::<Vec<int>>(), vec![0, 1, 2, 1, 2, 2]);
-        let mut l = bind(range(0i, 3), |x| bind(range(0i, 3), |y| ret(x + y)));
+        let mut l = bind(range(0i, 3), move |&: x: int|
+                         bind(range(0i, 3), move |&: y| ret(x + y)));
         assert_eq!(l.collect::<Vec<int>>(), vec![0, 1, 2, 1, 2, 3, 2, 3, 4]);
-        let mut l = bind(range(1i, 11),
-                         |z| bind(range(1, z + 1),
-                                  |y| bind(range(1, y + 1),
-                                           |x| bind(if x * x + y * y == z * z { ret(()) }
-                                                    else { mzero() },
-                                                    |_| ret((x, y, z))))));
+        let mut l = bind(range(1i, 11), move |&: z: int|
+                         bind(range(1, z + 1), move |&: y: int|
+                              bind(range(1, y + 1), move |&: x: int|
+                                   bind(if x * x + y * y == z * z { ret(()) }
+                                        else { mzero() },
+                                        move |&: _|
+                                        ret((x, y, z))))));
         assert_eq!(l.collect::<Vec<(int, int, int)>>(), vec![(3, 4, 5), (6, 8, 10)]);
     }
 
@@ -206,15 +251,15 @@ mod tests {
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![0, 1, 2, 1, 2, 2]);
         let l = mdo! {
-            x <- range(0i, 3);
+            x: int <- range(0i, 3);
             y <- range(0i, 3);
             ret ret(x + y)
         }.collect::<Vec<int>>();
         assert_eq!(l, vec![0, 1, 2, 1, 2, 3, 2, 3, 4]);
         let l = mdo! {
             z <- range(1i, 11);
-            y <- range(1, z);
-            x <- range(1, y + 1);
+            y: int <- range(1, z);
+            x: int <- range(1, y + 1);
             let test = x * x + y * y == z * z;
             when test;
             let res = (x, y, z);
@@ -248,7 +293,7 @@ mod tests {
     fn when_trick() {
         use super::iter::{bind, ret, mzero};
         let l = mdo! {
-            when <- range(0i, 5);
+            when: int <- range(0i, 5);
             when when != 3;
             ret ret(when)
         }.collect::<Vec<int>>();
@@ -270,7 +315,7 @@ mod tests {
     fn mdo_doc_example() {
         use super::iter::{bind, ret, mzero};
         let l = mdo! {
-            x <- range(0i, 5); // assign x to [0, 5[
+            x: int <- range(0i, 5); // assign x to [0, 5[
             ign range(0i, 2); // duplicate each value
             when x % 2 == 0; // filter on even values
             let y = x + 5; // create y

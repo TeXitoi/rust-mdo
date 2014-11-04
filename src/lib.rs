@@ -6,7 +6,7 @@
 // more details.
 
 #![license = "WTFPLv2"]
-#![deny(missing_doc)]
+#![deny(missing_docs)]
 #![deny(warnings)]
 
 #![feature(macro_rules)]

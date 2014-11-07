@@ -5,7 +5,7 @@ env:
 script: |
   cargo build -v &&
   cargo test -v &&
-  ./target/iter_mdo
+  ./target/examples/iter_mdo
 after_script: |
   cargo doc -v &&
   (cd target && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh)

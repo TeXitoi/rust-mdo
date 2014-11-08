@@ -54,6 +54,12 @@ macro_rules! mdo(
     );
 
     (
+        let $p: path : $ty: ty = $e: expr ; $( $t: tt )*
+    ) => (
+        { let $p: $ty = $e ; mdo! { $( $t )* } }
+    );
+
+    (
         $p: pat <- $e: expr ; $( $t: tt )*
     ) => (
         bind($e, move |&mut: $p | mdo! { $( $t )* } )
@@ -222,6 +228,14 @@ mod tests {
             ret ret(x * 2)
         };
         assert_eq!(x, None);
+    }
+
+    #[test]
+    fn let_type() {
+        let _: int = mdo! {
+            let i: int = 0;
+            ret i
+        };
     }
 
     #[test]

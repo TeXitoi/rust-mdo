@@ -56,25 +56,25 @@ macro_rules! mdo(
     (
         $p: pat <- $e: expr ; $( $t: tt )*
     ) => (
-        bind($e, move |&: $p | mdo! { $( $t )* } )
+        bind($e, move |&mut: $p | mdo! { $( $t )* } )
     );
 
     (
         $p: pat : $ty: ty <- $e: expr ; $( $t: tt )*
     ) => (
-        bind($e, move |&: $p : $ty | mdo! { $( $t )* } )
+        bind($e, move |&mut: $p : $ty | mdo! { $( $t )* } )
     );
 
     (
         ign $e: expr ; $( $t: tt )*
     ) => (
-        bind($e, move |&: _| mdo! { $( $t )* })
+        bind($e, move |&mut: _| mdo! { $( $t )* })
     );
 
     (
         when $e: expr ; $( $t: tt )*
     ) => (
-        bind(if $e { ret(()) } else { mzero() }, move |&: _| mdo! { $( $t )* })
+        bind(if $e { ret(()) } else { mzero() }, move |&mut: _| mdo! { $( $t )* })
     );
 
     (
@@ -88,7 +88,7 @@ pub mod option {
     //! Monadic functions for Option<T>
 
     /// bind for Option<T>, equivalent to `m.and_then(f)`
-    pub fn bind<T, U, F: Fn(T) -> Option<U>>(m: Option<T>, f: F) -> Option<U> {
+    pub fn bind<T, U, F: FnMut(T) -> Option<U>>(m: Option<T>, mut f: F) -> Option<U> {
         match m {
             Some(a) => f(a),
             None => None
@@ -110,7 +110,7 @@ pub mod result {
     //! Monadic functions for Result<T, E>
 
     /// bind for Result<T, E>, equivalent to `m.and_then(f)`
-    pub fn bind<T, E, U>(m: Result<T, E>, f: |T| -> Result<U, E>) -> Result<U, E> {
+    pub fn bind<T, E, U, F: FnMut(T) -> Result<U, E>>(m: Result<T, E>, mut f: F) -> Result<U, E> {
         match m {
             Ok(a) => f(a),
             Err(err) => Err(err)
@@ -140,7 +140,7 @@ pub mod iter {
     impl<A, T, B, U, F> Iterator<B> for UnboxedFlatMap<A, T, U, F>
             where T: Iterator<A>,
                   U: Iterator<B>,
-                  F: Fn(A) -> U {
+                  F: FnMut(A) -> U {
         fn next(&mut self) -> Option<B> {
             loop {
                 for inner in self.frontiter.iter_mut() {
@@ -166,7 +166,7 @@ pub mod iter {
     pub fn bind<A, T, B, U, F>(m: T, f: F) -> UnboxedFlatMap<A, T, U, F>
             where T: Iterator<A>,
                   U: Iterator<B>,
-                  F: Fn(A) -> U {
+                  F: FnMut(A) -> U {
         UnboxedFlatMap { iter: m, f: f, frontiter: None }
     }
 
@@ -189,12 +189,12 @@ mod tests {
         use super::option::{bind, ret, mzero};
         let x = ret(5i);
         assert_eq!(x, Some(5i));
-        let x = bind(ret(5i), move |&: x: int| ret(x + 1));
+        let x = bind(ret(5i), |&: x: int| ret(x + 1));
         assert_eq!(x, Some(6i));
-        let x = bind(ret(5i), move |&: x: int| bind(ret(x + 5), |&: x: int| ret(x * 2)));
+        let x = bind(ret(5i), |&: x: int| bind(ret(x + 5), |&: x: int| ret(x * 2)));
         assert_eq!(x, Some(20));
-        let x = bind(ret(5i), move |&: x: int| bind(if x == 0 { ret(()) } else { mzero() },
-                                                    |&: _| ret(x * 2)));
+        let x = bind(ret(5i), |&: x: int| bind(if x == 0 { ret(()) } else { mzero() },
+                                               |&: _| ret(x * 2)));
         assert_eq!(x, None);
     }
 

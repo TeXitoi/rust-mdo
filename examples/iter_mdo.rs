@@ -6,7 +6,7 @@
 // more details.
 
 #![feature(phase)]
-#![feature(unboxed_closures, overloaded_calls)]
+#![feature(unboxed_closures)]
 
 #[phase(plugin, link)]
 extern crate mdo;
@@ -20,10 +20,10 @@ fn main() {
     //  - 1 <= x <= y < z < 11
     //  - x^2 + y^2 == z^2
     let l = bind(
-        range(1i, 11), move |&: z|
-        bind(range(1, z), move |&: x|
-        bind(range(x, z), move |&: y: int|
-        bind(if x * x + y * y == z * z { ret(()) } else { mzero() }, move |&: _|
+        range(1i, 11), move |z|
+        bind(range(1, z), move |x|
+        bind(range(x, z), move |y|
+        bind(if x * x + y * y == z * z { ret(()) } else { mzero() }, move |_|
         ret((x, y, z))
     )))).collect::<Vec<(int, int, int)>>();
     println!("{}", l);
@@ -32,7 +32,7 @@ fn main() {
     let l = mdo! {
         z <- range(1i, 11);
         x <- range(1, z);
-        y: int <- range(x, z);
+        y <- range(x, z);
         when x * x + y * y == z * z;
         ret ret((x, y, z))
     }.collect::<Vec<(int, int, int)>>();

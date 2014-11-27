@@ -235,18 +235,18 @@ mod tests {
     #[test]
     fn iter_bind() {
         use super::iter::{bind, ret, mzero};
-        let mut l = bind(range(0i, 3), move |x| range(x, 3));
+        let l = bind(range(0i, 3), move |x| range(x, 3));
         assert_eq!(l.collect::<Vec<int>>(), vec![0, 1, 2, 1, 2, 2]);
-        let mut l = bind(range(0i, 3), move |x|
-                         bind(range(0i, 3), move |y| ret(x + y)));
+        let l = bind(range(0i, 3), move |x|
+                     bind(range(0i, 3), move |y| ret(x + y)));
         assert_eq!(l.collect::<Vec<int>>(), vec![0, 1, 2, 1, 2, 3, 2, 3, 4]);
-        let mut l = bind(range(1i, 11), move |z|
-                         bind(range(1, z + 1), move |y|
-                              bind(range(1, y + 1), move |x|
-                                   bind(if x * x + y * y == z * z { ret(()) }
-                                        else { mzero() },
-                                        move |_|
-                                        ret((x, y, z))))));
+        let l = bind(range(1i, 11), move |z|
+                     bind(range(1, z + 1), move |y|
+                          bind(range(1, y + 1), move |x|
+                               bind(if x * x + y * y == z * z { ret(()) }
+                                    else { mzero() },
+                                    move |_|
+                                    ret((x, y, z))))));
         assert_eq!(l.collect::<Vec<(int, int, int)>>(), vec![(3, 4, 5), (6, 8, 10)]);
     }
 
@@ -322,14 +322,14 @@ mod tests {
     #[test]
     fn ign_useless_type_annotation_no_macro() {
         use super::iter::{bind, ret};
-        let mut i = bind(range(0i, 5), move |i: int| bind(range(0i, 0), move |_| ret(i)));
+        let i = bind(range(0i, 5), move |i: int| bind(range(0i, 0), move |_| ret(i)));
         assert_eq!(i.collect::<Vec<_>>(), vec![]);
     }
 
     #[test]
     fn ign_useless_type_annotation() {
         use super::iter::{bind, ret};
-        let mut i = mdo! {
+        let i = mdo! {
             i: int <- range(0i, 5);
             _ <- range(0i, 0);
             ret ret(i)

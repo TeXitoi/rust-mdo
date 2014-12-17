@@ -133,7 +133,7 @@ pub mod iter {
     use std::option;
     use std::iter::FlatMap;
 
-    /// bind for Result<T, E>, equivalent to `m.flat_map(f)`
+    /// bind for Iterator<T, E>, equivalent to `m.flat_map(f)`
     pub fn bind<A, T, B, U, F>(m: T, f: F) -> FlatMap<A, B, T, U, F>
             where T: Iterator<A>,
                   U: Iterator<B>,

@@ -131,42 +131,14 @@ pub mod iter {
     //! Monadic functions for Iterator<T>
 
     use std::option;
-
-    /// An iterator that maps each element to an iterator,
-    /// and yields the elements of the produced iterators
-    ///
-    #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
-    pub struct UnboxedFlatMap<A, T, U, F> {
-        iter: T,
-        f: F,
-        frontiter: Option<U>
-    }
-    impl<A, T, B, U, F> Iterator<B> for UnboxedFlatMap<A, T, U, F>
-            where T: Iterator<A>,
-                  U: Iterator<B>,
-                  F: FnMut(A) -> U {
-        fn next(&mut self) -> Option<B> {
-            loop {
-                for inner in self.frontiter.iter_mut() {
-                    for x in *inner {
-                        return Some(x)
-                    }
-                }
-                match self.iter.next().map(|x| (self.f)(x)) {
-                    None => return None,
-                    next => self.frontiter = next,
-                }
-            }
-        }
-    }
-
+    use std::iter::FlatMap;
 
     /// bind for Result<T, E>, equivalent to `m.flat_map(f)`
-    pub fn bind<A, T, B, U, F>(m: T, f: F) -> UnboxedFlatMap<A, T, U, F>
+    pub fn bind<A, T, B, U, F>(m: T, f: F) -> FlatMap<A, B, T, U, F>
             where T: Iterator<A>,
                   U: Iterator<B>,
                   F: FnMut(A) -> U {
-        UnboxedFlatMap { iter: m, f: f, frontiter: None }
+        m.flat_map(f)
     }
 
     /// return for Iterator<T>, an iterator with one value.

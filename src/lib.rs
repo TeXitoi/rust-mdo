@@ -8,7 +8,7 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 
-#![feature(macro_rules, unboxed_closures)]
+#![feature(macro_rules)]
 
 //! Monadic do notation
 

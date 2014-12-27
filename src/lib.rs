@@ -86,7 +86,7 @@ macro_rules! mdo(
     ) => (
         $f
     )
-)
+);
 
 pub mod option {
     //! Monadic functions for Option<T>
@@ -142,12 +142,12 @@ pub mod iter {
     }
 
     /// return for Iterator<T>, an iterator with one value.
-    pub fn ret<T>(x: T) -> option::Item<T> {
+    pub fn ret<T>(x: T) -> option::IntoIter<T> {
         Some(x).into_iter()
     }
 
     /// mzero for Iterator<T>, an empty iterator.
-    pub fn mzero<T>() -> option::Item<T> {
+    pub fn mzero<T>() -> option::IntoIter<T> {
         None.into_iter()
     }
 }

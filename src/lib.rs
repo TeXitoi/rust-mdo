@@ -8,8 +8,6 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 
-#![feature(macro_rules)]
-
 //! Monadic do notation
 
 /// Monadic do notation using duck typing
@@ -44,7 +42,7 @@
 /// assert_eq!(l, vec![10, 10, 12, 12, 14, 14]);
 /// ```
 #[macro_export]
-macro_rules! mdo(
+macro_rules! mdo {
     (
         let $p: path = $e: expr ; $( $t: tt )*
     ) => (
@@ -86,7 +84,7 @@ macro_rules! mdo(
     ) => (
         $f
     )
-);
+}
 
 pub mod option {
     //! Monadic functions for Option<T>

@@ -5,10 +5,7 @@
 // Version 2, as published by Sam Hocevar. See the COPYING file for
 // more details.
 
-#![feature(phase)]
-#![feature(unboxed_closures)]
-
-#[phase(plugin, link)]
+#[macro_use]
 extern crate mdo;
 
 fn main() {

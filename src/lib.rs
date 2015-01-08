@@ -8,8 +8,6 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 
-#![feature(macro_rules)]
-
 //! Monadic do notation
 
 /// Monadic do notation using duck typing

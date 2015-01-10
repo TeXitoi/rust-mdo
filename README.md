@@ -10,10 +10,7 @@ functions are privided for some common monadic structures.
 ## Example
 
 ```rust
-#![feature(phase)]
-
-#[phase(plugin, link)]
-extern crate mdo;
+#[macro_use] extern crate mdo;
 
 fn main() {
     // exporting the monadic functions for the Iterator monad (similar
@@ -23,23 +20,25 @@ fn main() {
     // getting the list of (x, y, z) such that
     //  - 1 <= x <= y < z < 11
     //  - x^2 + y^2 == z^2
-    let mut l = bind(range(1i, 11),
-                     |z| bind(range(1, z),
-                              |x| bind(range(x, z),
-                                       |y| bind(if x * x + y * y == z * z { ret(()) }
-                                                else { mzero() },
-                                                |_| ret((x, y, z))))));
-    println!("{}", l.collect::<Vec<(int, int, int)>>());
+    let l = bind(1i32..11, move |z|
+                 bind(1..z, move |x|
+                      bind(x..z, move |y|
+                           bind(if x * x + y * y == z * z { ret(()) }
+                                else { mzero() },
+                                move |_|
+                                ret((x, y, z))
+                                )))).collect::<Vec<(i32, i32, i32)>>();
+    println!("{:?}", l);
 
     // the same thing, using the mdo! macro
     let l = mdo! {
-        z <- range(1i, 11);
-        x <- range(1, z);
-        y <- range(x, z);
+        z =<< 1i32..11;
+        x =<< 1..z;
+        y =<< x..z;
         when x * x + y * y == z * z;
         ret ret((x, y, z))
-    }.collect::<Vec<(int, int, int)>>();
-    println!("{}", l);
+    }.collect::<Vec<_>>();
+    println!("{:?}", l);
 }
 ```
 

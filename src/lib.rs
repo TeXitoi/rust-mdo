@@ -6,7 +6,7 @@
 // more details.
 
 #![deny(missing_docs)]
-#![deny(warnings)]
+//#![deny(warnings)]
 
 //! Monadic do notation
 
@@ -17,52 +17,55 @@
 ///
 /// instr can be:
 ///
-/// * `pattern <- expression`: bind expression to pattern. a `bind`
+/// * `pattern =<< expression`: bind expression to pattern. a `bind`
 ///   function must be in scope.
 ///
 /// * `let pattern = expression`: assign expression to pattern, as
 ///   normal rust let.
 ///
-/// * `ign expression`: equivalent to `_ <- expression`
+/// * `ign expression`: equivalent to `_ =<< expression`
 ///
 /// * `when expression`: filter on the monad. `ret` and `mzero`
 ///   functions must be in scope.
 ///
 /// # Example
 ///
-/// ```rust,ignore
-/// use iter::{bind, ret, mzero};
-/// let l = mdo! {
-///     x <- range(0i, 5); // assign x to [0, 5[
-///     ign range(0i, 2); // duplicate each value
-///     when x % 2 == 0; // filter on even values
-///     let y = x + 5; // create y
-///     ret ret(y + 5) // return y + 5
-/// }.collect::<Vec<int>>();
-/// assert_eq!(l, vec![10, 10, 12, 12, 14, 14]);
+/// ```
+/// #[macro_use] extern crate mdo;
+/// fn main() {
+///     use mdo::iter::{bind, ret, mzero};
+///     let l = mdo! {
+///         x =<< 0i32..5; // assign x to [0, 5[
+///         ign 0..2; // duplicate each value
+///         when x % 2 == 0; // filter on even values
+///         let y = x + 5; // create y
+///         ret ret(y + 5) // return y + 5
+///     }.collect::<Vec<_>>();
+///     assert_eq!(l, vec![10, 10, 12, 12, 14, 14]);
+/// }
 /// ```
 #[macro_export]
 macro_rules! mdo {
     (
-        let $p: path = $e: expr ; $( $t: tt )*
+        let $p: pat = $e: expr ; $( $t: tt )*
     ) => (
         { let $p = $e ; mdo! { $( $t )* } }
     );
 
     (
-        let $p: path : $ty: ty = $e: expr ; $( $t: tt )*
+        let $p: ident : $ty: ty = $e: expr ; $( $t: tt )*
     ) => (
         { let $p: $ty = $e ; mdo! { $( $t )* } }
     );
 
     (
-        $p: pat <- $e: expr ; $( $t: tt )*
+        $p: pat =<< $e: expr ; $( $t: tt )*
     ) => (
         bind($e, move |$p| mdo! { $( $t )* } )
     );
 
     (
-        $p: pat : $ty: ty <- $e: expr ; $( $t: tt )*
+        $p: ident : $ty: ty =<< $e: expr ; $( $t: tt )*
     ) => (
         bind($e, move |$p : $ty| mdo! { $( $t )* } )
     );
@@ -156,14 +159,14 @@ mod tests {
     #[test]
     fn option_bind() {
         use super::option::{bind, ret, mzero};
-        let x = ret(5i);
-        assert_eq!(x, Some(5i));
-        let x = bind(ret(5i), |x| ret(x + 1));
-        assert_eq!(x, Some(6i));
-        let x = bind(ret(5i), |x| bind(ret(x + 5), |x| ret(x * 2)));
+        let x = ret(5);
+        assert_eq!(x, Some(5));
+        let x = bind(ret(5), |x| ret(x + 1));
+        assert_eq!(x, Some(6));
+        let x = bind(ret(5), |x| bind(ret(x + 5), |x| ret(x * 2)));
         assert_eq!(x, Some(20));
-        let x = bind(ret(5i), |x| bind(if x == 0 { ret(()) } else { mzero() },
-                                       |_| ret(x * 2)));
+        let x = bind(ret(5i32), |x| bind(if x == 0 { ret(()) } else { mzero() },
+                                         |_| ret(x * 2)));
         assert_eq!(x, None);
     }
 
@@ -171,22 +174,22 @@ mod tests {
     fn option_mdo() {
         use super::option::{bind, ret, mzero};
         let x = mdo! {
-            ret ret(5i)
+            ret ret(5)
         };
-        assert_eq!(x, Some(5i));
+        assert_eq!(x, Some(5));
         let x = mdo! {
-            x <- ret(5i);
+            x =<< ret(5);
             ret ret(x + 1)
         };
-        assert_eq!(x, Some(6i));
+        assert_eq!(x, Some(6));
         let x = mdo! {
-            x <- ret(5i);
-            x <- ret(x + 5);
+            x =<< ret(5);
+            x =<< ret(x + 5);
             ret ret(x * 2)
         };
-        assert_eq!(x, Some(20i));
+        assert_eq!(x, Some(20));
         let x = mdo! {
-            x <- ret(5i);
+            x =<< ret(5i32);
             when x == 0;
             ret ret(x * 2)
         };
@@ -195,8 +198,8 @@ mod tests {
 
     #[test]
     fn let_type() {
-        let _: int = mdo! {
-            let i: int = 0;
+        let _: i32 = mdo! {
+            let i: i32 = 0;
             ret i
         };
     }
@@ -204,44 +207,44 @@ mod tests {
     #[test]
     fn iter_bind() {
         use super::iter::{bind, ret, mzero};
-        let l = bind(range(0i, 3), move |x| range(x, 3));
-        assert_eq!(l.collect::<Vec<int>>(), vec![0, 1, 2, 1, 2, 2]);
-        let l = bind(range(0i, 3), move |x|
-                     bind(range(0i, 3), move |y| ret(x + y)));
-        assert_eq!(l.collect::<Vec<int>>(), vec![0, 1, 2, 1, 2, 3, 2, 3, 4]);
-        let l = bind(range(1i, 11), move |z|
-                     bind(range(1, z + 1), move |y|
-                          bind(range(1, y + 1), move |x|
+        let l = bind(0..3, move |x| x..3);
+        assert_eq!(l.collect::<Vec<_>>(), vec![0, 1, 2, 1, 2, 2]);
+        let l = bind(0i32..3, move |x|
+                     bind(0..3, move |y| ret(x + y)));
+        assert_eq!(l.collect::<Vec<_>>(), vec![0, 1, 2, 1, 2, 3, 2, 3, 4]);
+        let l = bind(1i32..11, move |z|
+                     bind(1..z + 1, move |y|
+                          bind(1..y + 1, move |x|
                                bind(if x * x + y * y == z * z { ret(()) }
                                     else { mzero() },
                                     move |_|
                                     ret((x, y, z))))));
-        assert_eq!(l.collect::<Vec<(int, int, int)>>(), vec![(3, 4, 5), (6, 8, 10)]);
+        assert_eq!(l.collect::<Vec<_>>(), vec![(3, 4, 5), (6, 8, 10)]);
     }
 
     #[test]
     fn iter_mdo() {
         use super::iter::{bind, ret, mzero};
         let l = mdo! {
-            x <- range(0i, 3);
-            ret range(x, 3)
-        }.collect::<Vec<int>>();
+            x =<< 0..3;
+            ret x..3
+        }.collect::<Vec<_>>();
         assert_eq!(l, vec![0, 1, 2, 1, 2, 2]);
         let l = mdo! {
-            x <- range(0i, 3);
-            y <- range(0i, 3);
+            x =<< 0i32..3;
+            y =<< 0..3;
             ret ret(x + y)
-        }.collect::<Vec<int>>();
+        }.collect::<Vec<_>>();
         assert_eq!(l, vec![0, 1, 2, 1, 2, 3, 2, 3, 4]);
         let l = mdo! {
-            z <- range(1i, 11);
-            y <- range(1, z);
-            x <- range(1, y + 1);
+            z =<< 1i32..11;
+            y =<< 1..z;
+            x =<< 1..y + 1;
             let test = x * x + y * y == z * z;
             when test;
             let res = (x, y, z);
             ret ret(res)
-        }.collect::<Vec<(int, int, int)>>();
+        }.collect::<Vec<_>>();
         assert_eq!(l, vec![(3, 4, 5), (6, 8, 10)]);
     }
 
@@ -249,10 +252,10 @@ mod tests {
     fn iter_ignore() {
         use super::iter::{bind, ret};
         let l = mdo! {
-            x: int <- range(0i, 5);
-            ign range(0i, 2);
+            x =<< 0i32..5;
+            ign 0..2;
             ret ret(x)
-        }.collect::<Vec<int>>();
+        }.collect::<Vec<_>>();
         assert_eq!(l, vec![0, 0, 1, 1, 2, 2, 3, 3, 4, 4]);
     }
 
@@ -260,9 +263,9 @@ mod tests {
     fn ret_trick() {
         use super::iter::bind;
         let l = mdo! {
-            ret <- range(0i, 5);
-            ret range(0, ret)
-        }.collect::<Vec<int>>();
+            ret =<< 0..5;
+            ret 0..ret
+        }.collect::<Vec<_>>();
         assert_eq!(l, vec![0, 0, 1, 0, 1, 2, 0, 1, 2, 3]);
     }
 
@@ -270,10 +273,10 @@ mod tests {
     fn when_trick() {
         use super::iter::{bind, ret, mzero};
         let l = mdo! {
-            when <- range(0i, 5);
+            when =<< 0i32..5;
             when when != 3;
             ret ret(when)
-        }.collect::<Vec<int>>();
+        }.collect::<Vec<_>>();
         assert_eq!(l, vec![0, 1, 2, 4]);
     }
 
@@ -281,41 +284,23 @@ mod tests {
     fn ign_trick() {
         use super::iter::{bind, ret};
         let l = mdo! {
-            ign: int <- range(0i, 5);
-            ign range(0i, 0);
+            ign =<< 0i32..5;
+            ign 0..0;
             ret ret(ign)
-        }.collect::<Vec<int>>();
+        }.collect::<Vec<_>>();
         assert_eq!(l, vec![]);
-    }
-
-    #[test]
-    fn ign_useless_type_annotation_no_macro() {
-        use super::iter::{bind, ret};
-        let i = bind(range(0i, 5), move |i: int| bind(range(0i, 0), move |_| ret(i)));
-        assert_eq!(i.collect::<Vec<_>>(), vec![]);
-    }
-
-    #[test]
-    fn ign_useless_type_annotation() {
-        use super::iter::{bind, ret};
-        let i = mdo! {
-            i: int <- range(0i, 5);
-            _ <- range(0i, 0);
-            ret ret(i)
-        };
-        assert_eq!(i.collect::<Vec<_>>(), vec![]);
     }
 
     #[test]
     fn mdo_doc_example() {
         use super::iter::{bind, ret, mzero};
         let l = mdo! {
-            x <- range(0i, 5); // assign x to [0, 5[
-            ign range(0i, 2); // duplicate each value
+            x: i32 =<< 0..5; // assign x to [0, 5[
+            ign 0..2; // duplicate each value
             when x % 2 == 0; // filter on even values
             let y = x + 5; // create y
             ret ret(y + 5) // return y + 5
-        }.collect::<Vec<int>>();
+        }.collect::<Vec<_>>();
         assert_eq!(l, vec![10, 10, 12, 12, 14, 14]);
     }
 }

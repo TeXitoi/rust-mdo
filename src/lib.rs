@@ -6,7 +6,7 @@
 // more details.
 
 #![deny(missing_docs)]
-//#![deny(warnings)]
+#![deny(warnings)]
 
 //! Monadic do notation
 

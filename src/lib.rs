@@ -135,10 +135,8 @@ pub mod iter {
     use std::iter::FlatMap;
 
     /// bind for Iterator<T, E>, equivalent to `m.flat_map(f)`
-    pub fn bind<A, T, B, U, F>(m: T, f: F) -> FlatMap<A, B, T, U, F>
-            where T: Iterator<Item=A>,
-                  U: Iterator<Item=B>,
-                  F: FnMut(A) -> U {
+    pub fn bind<I, U, F>(m: I, f: F) -> FlatMap<I, U, F>
+    where I: Iterator, U: Iterator, F: FnMut(<I as Iterator>::Item) -> U {
         m.flat_map(f)
     }
 

@@ -3,6 +3,13 @@
 name = "mdo"
 version = "0.2.0"
 authors = ["Guillaume Pinot <texitoi@texitoi.eu>"]
+description = "Monadic do notation for rust using macro and duck typing"
+documentation = "https://texitoi.eu/rust/mdo/"
+homepage = "https://github.com/TeXitoi/rust-mdo"
+repository = "https://github.com/TeXitoi/rust-mdo"
+readme = "README.md"
+keywords = ["macro", "monad", "do"]
+license = "WTFPL"
 
 [lib]
 

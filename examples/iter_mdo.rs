@@ -22,7 +22,7 @@ fn main() {
                                 else { mzero() },
                                 move |_|
                                 ret((x, y, z))
-                                )))).collect::<Vec<(i32, i32, i32)>>();
+                                )))).collect::<Vec<_>>();
     println!("{:?}", l);
 
     // the same thing, using the mdo! macro

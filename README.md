@@ -9,6 +9,12 @@ functions are privided for some common monadic structures.
 
 ## Example
 
+Add to your `Cargo.toml`:
+```toml
+[dependencies]
+mdo = "*"
+```
+
 ```rust
 #[macro_use] extern crate mdo;
 
@@ -27,7 +33,7 @@ fn main() {
                                 else { mzero() },
                                 move |_|
                                 ret((x, y, z))
-                                )))).collect::<Vec<(i32, i32, i32)>>();
+                                )))).collect::<Vec<_>>();
     println!("{:?}", l);
 
     // the same thing, using the mdo! macro
@@ -44,8 +50,7 @@ fn main() {
 
 ## Documentation
 
-You can find the rustdoc
-[here](http://www.rust-ci.org/TeXitoi/rust-mdo/doc/mdo/).
+You can find the rustdoc [here](https://texitoi.eu/rust/mdo/).
 
 ## License
 

@@ -1,5 +1,9 @@
 language: rust
 sudo: false
+rust:
+  - nightly
+  - beta
+  - stable
 script: |
   cargo build -v &&
   cargo test -v &&

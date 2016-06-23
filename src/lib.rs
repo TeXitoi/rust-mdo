@@ -93,11 +93,8 @@ pub mod option {
     //! Monadic functions for Option<T>
 
     /// bind for Option<T>, equivalent to `m.and_then(f)`
-    pub fn bind<T, U, F: FnMut(T) -> Option<U>>(m: Option<T>, mut f: F) -> Option<U> {
-        match m {
-            Some(a) => f(a),
-            None => None
-        }
+    pub fn bind<T, U, F: FnOnce(T) -> Option<U>>(m: Option<T>, f: F) -> Option<U> {
+        m.and_then(f)
     }
 
     /// return for Option<T>, equivalent to `Some(x)`
@@ -115,11 +112,8 @@ pub mod result {
     //! Monadic functions for Result<T, E>
 
     /// bind for Result<T, E>, equivalent to `m.and_then(f)`
-    pub fn bind<T, E, U, F: FnMut(T) -> Result<U, E>>(m: Result<T, E>, mut f: F) -> Result<U, E> {
-        match m {
-            Ok(a) => f(a),
-            Err(err) => Err(err)
-        }
+    pub fn bind<T, E, U, F: FnOnce(T) -> Result<U, E>>(m: Result<T, E>, f: F) -> Result<U, E> {
+        m.and_then(f)
     }
 
     /// return for Result<T, E>, equivalent to `Ok(x)`

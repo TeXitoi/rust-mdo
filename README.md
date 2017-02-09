@@ -52,6 +52,16 @@ fn main() {
 
 You can find the rustdoc [here](https://texitoi.eu/rust/mdo/).
 
+## Supported monad
+
+This library provides the definitions for the following monads:
+  - `Option`
+  - `Iterator`
+  - `Result` (without error conversion)
+  
+Other implemetation in external crates:
+  - `Future` in [mdo-future](https://crates.io/crates/mdo-future)
+
 ## License
 
 This work is free. You can redistribute it and/or modify it under the

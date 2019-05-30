@@ -2,10 +2,10 @@
 
 ## Presentation
 
-Rust mdo is a monadic do notation using macro and duck typing.  It
-provides a syntax extention providing something looking like the
-Haskell do notation, and rewrite it using a `bind` function.  Some
-functions are privided for some common monadic structures.
+Rust mdo is a monadic do notation using macros and duck typing.  It
+provides a syntax extension providing something that looks like the
+Haskell do notation, and rewrites it using a `bind` function.  Some
+functions are provided for a number of common monadic structures.
 
 ## Example
 
@@ -52,14 +52,14 @@ fn main() {
 
 You can find the rustdoc [here](https://texitoi.eu/rust/mdo/).
 
-## Supported monad
+## Supported monads
 
-This library provides the definitions for the following monads:
+This library provides definitions for the following monads:
   - `Option`
   - `Iterator`
   - `Result` (without error conversion)
   
-Other implemetation in external crates:
+Other implementations in external crates:
   - `Future` in [mdo-future](https://crates.io/crates/mdo-future)
 
 ## License
